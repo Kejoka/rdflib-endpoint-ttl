@@ -336,7 +336,16 @@ class SparqlRouter(APIRouter):
                         g = self.graph.graph(URIRef(f"http://activate.htwk-leipzig.de/graph/{graph_name}"));
                         graphs[ttl_files[graph_name].split("/")[-1]] = g
                         open(ttl_files[graph_name], "w").close()
-                    graphs[ttl_files[graph_name].split("/")[-1]].serialize(ttl_files[graph_name], format="turtle")
+                    if graph_name is not None and update.find("DROP GRAPH") != -1:
+                        try:
+                            print(ttl_files[graph_name])
+                            os.remove(ttl_files[graph_name])
+                            graphs[ttl_files[graph_name].split("/")[-1]] = None
+                            ttl_files[graph_name] = None
+                        except Exception as e:
+                            print(f"Error deleting the ttl file: {e}")
+                    else:
+                        graphs[ttl_files[graph_name].split("/")[-1]].serialize(ttl_files[graph_name], format="turtle")
                     # Ends here
                     
                     self.graph.serialize(format="turtle")
