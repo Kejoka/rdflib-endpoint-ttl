@@ -180,7 +180,7 @@ class SparqlRouter(APIRouter):
         title: str = DEFAULT_TITLE,
         description: str = DEFAULT_DESCRIPTION,
         version: str = DEFAULT_VERSION,
-        graph: Union[None, Graph, ConjunctiveGraph, Dataset] = None,
+        graph: Dataset = None,
         graphs: Optional[Dict[str, Graph]] = None,
         processor: Union[str, Processor] = "sparql",
         custom_eval: Optional[Callable[..., Any]] = None,
@@ -197,7 +197,7 @@ class SparqlRouter(APIRouter):
         Constructor of the SPARQL endpoint, everything happens here.
         FastAPI calls are defined in this constructor
         """
-        self.graph = graph if graph is not None else ConjunctiveGraph()
+        self.graph = graph if graph is not None else Dataset()
         self.graphs = graphs if graphs is not None else {}
         self.functions = functions if functions is not None else {}
         self.processor = processor
@@ -327,10 +327,13 @@ class SparqlRouter(APIRouter):
                     prechecked_update: str = update  # type: ignore
                     parsed_update = prepareUpdate(prechecked_update, initNs=graph_ns)
                     self.graph.update(parsed_update, "sparql")
-
                     # Added serialization to ttl
                     match = re.search(r"GRAPH graph:(\S+)", update)
                     graph_name = match.group(1) if match else None
+                    if graph_name not in ttl_files.keys():
+                        print(f"Graph {graph_name} not found in the list of graphs. Creating new ttl file..")
+                        ttl_files[graph_name] = f"./data/{graph_name}.ttl"
+                        open(ttl_files[graph_name], "w").close()
                     graphs[ttl_files[graph_name].split("/")[-1]].serialize(ttl_files[graph_name], format="turtle")
                     # Ends here
                     
