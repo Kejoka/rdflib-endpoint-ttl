@@ -333,6 +333,8 @@ class SparqlRouter(APIRouter):
                     if graph_name not in ttl_files.keys():
                         print(f"Graph {graph_name} not found in the list of graphs. Creating new ttl file..")
                         ttl_files[graph_name] = f"./data/{graph_name}.ttl"
+                        g = self.graph.graph(URIRef(f"http://activate.htwk-leipzig.de/graph/{graph_name}"));
+                        graphs[ttl_files[graph_name].split("/")[-1]] = g
                         open(ttl_files[graph_name], "w").close()
                     graphs[ttl_files[graph_name].split("/")[-1]].serialize(ttl_files[graph_name], format="turtle")
                     # Ends here
